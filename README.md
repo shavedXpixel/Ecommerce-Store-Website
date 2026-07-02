@@ -9,7 +9,7 @@
     <a href="#features"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="#">View Demo</a>
+    <a href="https://ecommerce-store-website-blond.vercel.app/">View Demo</a>
     ·
     <a href="#">Report Bug</a>
     ·
