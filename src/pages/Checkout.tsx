@@ -112,7 +112,7 @@ const Checkout = () => {
     try {
       const orderPayload = {
         items: cartItems.map(item => ({
-          productId: parseInt(item.id),
+          productId: item.id,
           quantity: item.quantity,
           price: parseFloat(item.price.replace('₹', '').replace(/,/g, ''))
         })),
