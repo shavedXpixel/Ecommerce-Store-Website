@@ -18,10 +18,10 @@ const Navigation = () => {
   // Preload dropdown images for faster display
   useEffect(() => {
     const imagesToPreload = [
-      "/rings-collection.png",
-      "/earrings-collection.png", 
-      "/arcus-bracelet.png",
-      "/span-bracelet.png",
+      "https://images.unsplash.com/photo-1603302576837-37561b2e2302",
+      "https://images.unsplash.com/photo-1587829741301-dc798b83add3", 
+      "https://images.unsplash.com/photo-1527814050087-3793815479db",
+      "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb",
       "/founders.png"
     ];
     
@@ -53,8 +53,8 @@ const Navigation = () => {
         "Accessories"
       ],
       images: [
-        { src: "/rings-collection.png", alt: "Gaming Laptops Collection", label: "Laptops" },
-        { src: "/earrings-collection.png", alt: "Mechanical Keyboards Collection", label: "Keyboards" }
+        { src: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=400&q=80", alt: "Gaming Laptops Collection", label: "Laptops" },
+        { src: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=400&q=80", alt: "Mechanical Keyboards Collection", label: "Keyboards" }
       ]
     },
     { 
@@ -68,8 +68,8 @@ const Navigation = () => {
         "Pre-Orders"
       ],
       images: [
-        { src: "/arcus-bracelet.png", alt: "Phantom Air Wireless Mouse", label: "Phantom Air Mouse" },
-        { src: "/span-bracelet.png", alt: "Echo 7 Wireless Headset", label: "Echo 7 Headset" }
+        { src: "https://images.unsplash.com/photo-1527814050087-3793815479db?auto=format&fit=crop&w=400&q=80", alt: "Phantom Air Wireless Mouse", label: "Phantom Air Mouse" },
+        { src: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&w=400&q=80", alt: "Echo 7 Wireless Headset", label: "Echo 7 Headset" }
       ]
     },
     { 

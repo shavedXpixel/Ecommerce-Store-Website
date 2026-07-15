@@ -1,5 +1,5 @@
-import monitorImage from "@/assets/circular-collection.png";
-import keyboardImage from "@/assets/organic-earring.png";
+import monitorImage from "@/assets/hero-image.png";
+import keyboardImage from "@/assets/hero-3d-replacement.jpg";
 import { Link } from "react-router-dom";
 
 const OneThirdTwoThirdsSection = () => {

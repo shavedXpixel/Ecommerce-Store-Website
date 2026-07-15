@@ -1,5 +1,5 @@
-import keyboardsCollection from "@/assets/earrings-collection.png";
-import headphonesProduct from "@/assets/link-bracelet.png";
+import keyboardsCollection from "@/assets/showcase-gear.jpg";
+import headphonesProduct from "@/assets/promo-gear.jpg";
 import { Link } from "react-router-dom";
 
 const FiftyFiftySection = () => {
