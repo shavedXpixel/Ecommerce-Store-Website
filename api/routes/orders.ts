@@ -1,12 +1,12 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Create a new order
-router.post('/', authenticateToken, async (req: any, res: any) => {
+router.post('/', authenticate, async (req: any, res: any) => {
   try {
     const userId = req.user.id;
     const { items, subtotal, shipping, total, paymentMethod, shippingAddress, billingAddress } = req.body;
@@ -45,7 +45,7 @@ router.post('/', authenticateToken, async (req: any, res: any) => {
 });
 
 // Get an order by ID (for invoice)
-router.get('/:id', authenticateToken, async (req: any, res: any) => {
+router.get('/:id', authenticate, async (req: any, res: any) => {
   try {
     const orderId = parseInt(req.params.id);
     const userId = req.user.id;
@@ -88,7 +88,7 @@ router.get('/:id', authenticateToken, async (req: any, res: any) => {
 });
 
 // Get all orders for the logged-in user
-router.get('/', authenticateToken, async (req: any, res: any) => {
+router.get('/', authenticate, async (req: any, res: any) => {
   try {
     const userId = req.user.id;
     const orders = await prisma.order.findMany({
