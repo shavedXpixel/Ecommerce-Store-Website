@@ -1,8 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import authRoutes from './routes/auth';
-import productRoutes from './routes/products';
+import authRoutes from './routes/auth.js';
+import productRoutes from './routes/products.js';
 
 dotenv.config();
 
