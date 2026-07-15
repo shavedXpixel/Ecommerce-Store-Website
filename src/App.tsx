@@ -12,6 +12,7 @@ import Signup from "./pages/auth/Signup";
 import Category from "./pages/Category";
 import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
+import Invoice from "./pages/Invoice";
 import NotFound from "./pages/NotFound";
 import OurStory from "./pages/about/OurStory";
 import Sustainability from "./pages/about/Sustainability";
@@ -37,9 +38,10 @@ const App = () => (
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/signup" element={<Signup />} />
           <Route path="/category/:category" element={<Category />} />
-          <Route path="/product/:productId" element={<ProductDetail />} />
+          <Route path="/product/:slug" element={<ProductDetail />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/about/our-story" element={<OurStory />} />
+          <Route path="/invoice/:id" element={<Invoice />} />
+          <Route path="/about" element={<OurStory />} />
           <Route path="/about/sustainability" element={<Sustainability />} />
           <Route path="/about/size-guide" element={<SizeGuide />} />
           <Route path="/about/customer-care" element={<CustomerCare />} />

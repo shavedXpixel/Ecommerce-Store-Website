@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Minus, Plus, CreditCard, Check } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Minus, Plus, CreditCard, Check, Banknote, Smartphone } from "lucide-react";
 import CheckoutHeader from "../components/header/CheckoutHeader";
 import Footer from "../components/footer/Footer";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import { toast } from "sonner";
 
 const Checkout = () => {
   const [showDiscountInput, setShowDiscountInput] = useState(false);
@@ -36,16 +39,20 @@ const Checkout = () => {
     country: ""
   });
   const [shippingOption, setShippingOption] = useState("standard");
+  const [paymentMethod, setPaymentMethod] = useState("credit_card");
   const [paymentDetails, setPaymentDetails] = useState({
     cardNumber: "",
     expiryDate: "",
     cvv: "",
-    cardholderName: ""
+    cardholderName: "",
+    upiId: ""
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
   
-  const { cartItems, updateQuantity } = useCart();
+  const { cartItems, updateQuantity, clearCart } = useCart();
+  const { token, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   const subtotal = cartItems.reduce((sum, item) => {
     const price = parseFloat(item.price.replace('₹', '').replace(/,/g, ''));
@@ -89,13 +96,63 @@ const Checkout = () => {
   };
 
   const handleCompleteOrder = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please login to complete your order");
+      navigate('/auth/login', { state: { from: '/checkout' } });
+      return;
+    }
+
+    if (cartItems.length === 0) {
+      toast.error("Your cart is empty");
+      return;
+    }
+
     setIsProcessing(true);
     
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsProcessing(false);
-    setPaymentComplete(true);
+    try {
+      const orderPayload = {
+        items: cartItems.map(item => ({
+          productId: parseInt(item.id),
+          quantity: item.quantity,
+          price: parseFloat(item.price.replace('₹', '').replace(/,/g, ''))
+        })),
+        subtotal,
+        shipping,
+        total,
+        paymentMethod,
+        shippingAddress,
+        billingAddress: hasSeparateBilling ? billingDetails : shippingAddress
+      };
+
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(orderPayload)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create order');
+      }
+
+      const order = await response.json();
+      
+      setPaymentComplete(true);
+      clearCart();
+      toast.success("Order placed successfully!");
+      
+      setTimeout(() => {
+        navigate(`/invoice/${order.id}`);
+      }, 1500);
+
+    } catch (error) {
+      console.error(error);
+      toast.error("There was an error processing your order. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -515,83 +572,148 @@ const Checkout = () => {
               
               {!paymentComplete ? (
                 <div className="space-y-6">
-                  <div>
-                    <Label htmlFor="cardholderName" className="text-sm font-light text-foreground">
-                      Cardholder Name *
-                    </Label>
-                    <Input
-                      id="cardholderName"
-                      type="text"
-                      value={paymentDetails.cardholderName}
-                      onChange={(e) => handlePaymentDetailsChange("cardholderName", e.target.value)}
-                      className="mt-2 rounded-none"
-                      placeholder="Name on card"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="cardNumber" className="text-sm font-light text-foreground">
-                      Card Number *
-                    </Label>
-                    <div className="relative mt-2">
-                      <Input
-                        id="cardNumber"
-                        type="text"
-                        value={paymentDetails.cardNumber}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
-                          if (value.length <= 19) {
-                            handlePaymentDetailsChange("cardNumber", value);
-                          }
-                        }}
-                        className="rounded-none pl-10"
-                        placeholder="4242 4242 4242 4242"
-                        maxLength={19}
-                      />
-                      <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="expiryDate" className="text-sm font-light text-foreground">
-                        Expiry Date *
+                  <RadioGroup 
+                    value={paymentMethod} 
+                    onValueChange={setPaymentMethod}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"
+                  >
+                    <div className="flex items-center space-x-3 border border-muted-foreground/20 p-4 rounded-none cursor-pointer hover:border-foreground/50 transition-colors">
+                      <RadioGroupItem value="credit_card" id="credit_card" />
+                      <Label htmlFor="credit_card" className="font-light text-foreground flex items-center gap-2 cursor-pointer">
+                        <CreditCard className="w-4 h-4" /> Credit Card
                       </Label>
-                      <Input
-                        id="expiryDate"
-                        type="text"
-                        value={paymentDetails.expiryDate}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '').replace(/(\d{2})(\d{2})/, '$1/$2');
-                          if (value.length <= 5) {
-                            handlePaymentDetailsChange("expiryDate", value);
-                          }
-                        }}
-                        className="mt-2 rounded-none"
-                        placeholder="MM/YY"
-                        maxLength={5}
-                      />
                     </div>
-                    <div>
-                      <Label htmlFor="cvv" className="text-sm font-light text-foreground">
-                        CVV *
+                    <div className="flex items-center space-x-3 border border-muted-foreground/20 p-4 rounded-none cursor-pointer hover:border-foreground/50 transition-colors">
+                      <RadioGroupItem value="paypal" id="paypal" />
+                      <Label htmlFor="paypal" className="font-light text-foreground flex items-center gap-2 cursor-pointer">
+                        PayPal
                       </Label>
-                      <Input
-                        id="cvv"
-                        type="text"
-                        value={paymentDetails.cvv}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '');
-                          if (value.length <= 3) {
-                            handlePaymentDetailsChange("cvv", value);
-                          }
-                        }}
-                        className="mt-2 rounded-none"
-                        placeholder="123"
-                        maxLength={3}
-                      />
                     </div>
-                  </div>
+                    <div className="flex items-center space-x-3 border border-muted-foreground/20 p-4 rounded-none cursor-pointer hover:border-foreground/50 transition-colors">
+                      <RadioGroupItem value="upi" id="upi" />
+                      <Label htmlFor="upi" className="font-light text-foreground flex items-center gap-2 cursor-pointer">
+                        <Smartphone className="w-4 h-4" /> UPI
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 border border-muted-foreground/20 p-4 rounded-none cursor-pointer hover:border-foreground/50 transition-colors">
+                      <RadioGroupItem value="cod" id="cod" />
+                      <Label htmlFor="cod" className="font-light text-foreground flex items-center gap-2 cursor-pointer">
+                        <Banknote className="w-4 h-4" /> Cash on Delivery
+                      </Label>
+                    </div>
+                  </RadioGroup>
+
+                  {paymentMethod === "credit_card" && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                      <div>
+                        <Label htmlFor="cardholderName" className="text-sm font-light text-foreground">
+                          Cardholder Name *
+                        </Label>
+                        <Input
+                          id="cardholderName"
+                          type="text"
+                          value={paymentDetails.cardholderName}
+                          onChange={(e) => handlePaymentDetailsChange("cardholderName", e.target.value)}
+                          className="mt-2 rounded-none"
+                          placeholder="Name on card"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="cardNumber" className="text-sm font-light text-foreground">
+                          Card Number *
+                        </Label>
+                        <div className="relative mt-2">
+                          <Input
+                            id="cardNumber"
+                            type="text"
+                            value={paymentDetails.cardNumber}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
+                              if (value.length <= 19) {
+                                handlePaymentDetailsChange("cardNumber", value);
+                              }
+                            }}
+                            className="rounded-none pl-10"
+                            placeholder="4242 4242 4242 4242"
+                            maxLength={19}
+                          />
+                          <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="expiryDate" className="text-sm font-light text-foreground">
+                            Expiry Date *
+                          </Label>
+                          <Input
+                            id="expiryDate"
+                            type="text"
+                            value={paymentDetails.expiryDate}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, '').replace(/(\d{2})(\d{2})/, '$1/$2');
+                              if (value.length <= 5) {
+                                handlePaymentDetailsChange("expiryDate", value);
+                              }
+                            }}
+                            className="mt-2 rounded-none"
+                            placeholder="MM/YY"
+                            maxLength={5}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="cvv" className="text-sm font-light text-foreground">
+                            CVV *
+                          </Label>
+                          <Input
+                            id="cvv"
+                            type="text"
+                            value={paymentDetails.cvv}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, '');
+                              if (value.length <= 3) {
+                                handlePaymentDetailsChange("cvv", value);
+                              }
+                            }}
+                            className="mt-2 rounded-none"
+                            placeholder="123"
+                            maxLength={3}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {paymentMethod === "upi" && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                      <div>
+                        <Label htmlFor="upiId" className="text-sm font-light text-foreground">
+                          UPI ID *
+                        </Label>
+                        <Input
+                          id="upiId"
+                          type="text"
+                          value={paymentDetails.upiId}
+                          onChange={(e) => handlePaymentDetailsChange("upiId", e.target.value)}
+                          className="mt-2 rounded-none"
+                          placeholder="yourname@upi"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {paymentMethod === "paypal" && (
+                    <div className="p-4 bg-muted/10 border border-muted-foreground/20 text-center animate-in fade-in slide-in-from-top-4 duration-300">
+                      <p className="text-sm text-muted-foreground">You will be redirected to PayPal to complete your purchase securely.</p>
+                    </div>
+                  )}
+                  
+                  {paymentMethod === "cod" && (
+                    <div className="p-4 bg-muted/10 border border-muted-foreground/20 text-center animate-in fade-in slide-in-from-top-4 duration-300">
+                      <p className="text-sm text-muted-foreground">You will pay with cash when your order is delivered.</p>
+                    </div>
+                  )}
 
                   {/* Order Total Summary */}
                   <div className="bg-muted/10 p-6 rounded-none border border-muted-foreground/20 space-y-3">
@@ -613,7 +735,12 @@ const Checkout = () => {
 
                   <Button
                     onClick={handleCompleteOrder}
-                    disabled={isProcessing || !paymentDetails.cardNumber || !paymentDetails.expiryDate || !paymentDetails.cvv || !paymentDetails.cardholderName}
+                    disabled={
+                      isProcessing || 
+                      (paymentMethod === "credit_card" && (!paymentDetails.cardNumber || !paymentDetails.expiryDate || !paymentDetails.cvv || !paymentDetails.cardholderName)) ||
+                      (paymentMethod === "upi" && !paymentDetails.upiId) ||
+                      !shippingAddress.address || !shippingAddress.city || !customerDetails.email
+                    }
                     className="w-full rounded-none h-12 text-base"
                   >
                     {isProcessing ? "Processing..." : `Complete Order • ₹${total.toLocaleString("en-IN")}`}
