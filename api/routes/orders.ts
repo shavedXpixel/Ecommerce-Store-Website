@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 // Create a new order
 router.post('/', authenticate, async (req: any, res: any) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const { items, subtotal, shipping, total, paymentMethod, shippingAddress, billingAddress } = req.body;
 
     if (!items || items.length === 0) {
@@ -48,7 +48,7 @@ router.post('/', authenticate, async (req: any, res: any) => {
 router.get('/:id', authenticate, async (req: any, res: any) => {
   try {
     const orderId = parseInt(req.params.id);
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     const order = await prisma.order.findUnique({
       where: {
@@ -90,7 +90,7 @@ router.get('/:id', authenticate, async (req: any, res: any) => {
 // Get all orders for the logged-in user
 router.get('/', authenticate, async (req: any, res: any) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const orders = await prisma.order.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
