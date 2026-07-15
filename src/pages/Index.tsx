@@ -12,12 +12,14 @@ import Newsletter from "../components/home/Newsletter";
 import SceneBackground from "../components/three/SceneBackground";
 import PerformanceShowcase from "../components/home/PerformanceShowcase";
 import ScrollReveal from "../components/ScrollReveal";
-import { products } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 
 const Index = () => {
   useEffect(() => {
     document.title = "Priyansu Store — Gaming Laptops, Keyboards, Mice & More";
   }, []);
+
+  const { data: products = [], isLoading } = useProducts();
 
   const featured = products.filter((p) => p.isNew).concat(
     products.filter((p) => !p.isNew)
@@ -26,6 +28,10 @@ const Index = () => {
   const bestSellers = [...products]
     .sort((a, b) => b.reviewCount - a.reviewCount)
     .slice(0, 8);
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background relative">

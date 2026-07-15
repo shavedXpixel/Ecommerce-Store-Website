@@ -5,7 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 import { CartProvider } from "./context/CartContext";
+import { AuthProvider } from "./context/AuthContext";
 import Index from "./pages/Index";
+import Login from "./pages/auth/Login";
+import Signup from "./pages/auth/Signup";
 import Category from "./pages/Category";
 import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
@@ -27,9 +30,12 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ScrollToTop />
+        <AuthProvider>
         <CartProvider>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/auth/login" element={<Login />} />
+          <Route path="/auth/signup" element={<Signup />} />
           <Route path="/category/:category" element={<Category />} />
           <Route path="/product/:productId" element={<ProductDetail />} />
           <Route path="/checkout" element={<Checkout />} />
@@ -44,6 +50,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
         </CartProvider>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

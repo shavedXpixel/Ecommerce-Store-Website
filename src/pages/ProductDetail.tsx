@@ -14,15 +14,28 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { getProductById, products } from "@/data/products";
+import { useProductById, useProductsByCategory } from "@/hooks/useProducts";
 
 const ProductDetail = () => {
   const { productId } = useParams();
-  const product = getProductById(productId ?? "");
+  const { data: product, isLoading } = useProductById(productId ?? "");
+  const { data: categoryProducts = [] } = useProductsByCategory(product?.category ?? "");
 
   useEffect(() => {
     if (product) document.title = `${product.name} — Priyansu Store`;
   }, [product]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-24 pb-24 px-6 text-center">
+          <h1 className="text-2xl font-light mb-4">Loading product...</h1>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -39,9 +52,8 @@ const ProductDetail = () => {
     );
   }
 
-  const related = products
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .concat(products.filter((p) => p.category !== product.category))
+  const related = categoryProducts
+    .filter((p) => p.id !== product.id)
     .slice(0, 8);
 
   return (

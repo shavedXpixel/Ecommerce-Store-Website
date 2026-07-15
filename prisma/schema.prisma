@@ -1,0 +1,54 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String   @unique
+  password  String
+  phone     String?
+  dob       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+}
+
+model Product {
+  id               Int      @id @default(autoincrement())
+  slug             String   @unique
+  name             String
+  brand            String
+  category         String
+  categoryLabel    String
+  price            Float
+  rating           Float    @default(0)
+  reviewCount      Int      @default(0)
+  isNew            Boolean  @default(false)
+  image            String
+  // Stored as JSON strings since SQLite doesn't support arrays directly
+  gallery          String // JSON string array
+  shortDescription String
+  description      String // JSON string array
+  specs            String // JSON array of objects
+  highlights       String // JSON string array
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Order {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  total     Float
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+}

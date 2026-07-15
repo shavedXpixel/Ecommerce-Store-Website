@@ -6,10 +6,10 @@ import CategoryHeader from "../components/category/CategoryHeader";
 import FilterSortBar from "../components/category/FilterSortBar";
 import ProductGrid from "../components/category/ProductGrid";
 import {
-  products,
   categoryMeta,
   type ProductCategory,
 } from "@/data/products";
+import { useProductsByCategory, useProducts } from "@/hooks/useProducts";
 
 const Category = () => {
   const { category } = useParams<{ category: string }>();
@@ -18,10 +18,12 @@ const Category = () => {
   const key = (category ?? "") as ProductCategory;
   const meta = categoryMeta[key];
 
-  const items = useMemo(() => {
-    if (meta) return products.filter((p) => p.category === key);
-    return products;
-  }, [key, meta]);
+  // If there's a category, fetch by category. Otherwise fetch all.
+  const { data: categoryProducts = [], isLoading: loadingCat } = useProductsByCategory(key);
+  const { data: allProducts = [], isLoading: loadingAll } = useProducts();
+
+  const items = meta ? categoryProducts : allProducts;
+  const isLoading = meta ? loadingCat : loadingAll;
 
   const label = meta ? meta.label : "All Products";
 
@@ -34,15 +36,21 @@ const Category = () => {
       <Header />
 
       <main className="pt-6">
-        <CategoryHeader category={label} description={meta?.description} />
+        {isLoading ? (
+          <div className="flex items-center justify-center py-24">Loading...</div>
+        ) : (
+          <>
+            <CategoryHeader category={label} description={meta?.description} />
 
-        <FilterSortBar
-          filtersOpen={filtersOpen}
-          setFiltersOpen={setFiltersOpen}
-          itemCount={items.length}
-        />
+            <FilterSortBar
+              filtersOpen={filtersOpen}
+              setFiltersOpen={setFiltersOpen}
+              itemCount={items.length}
+            />
 
-        <ProductGrid items={items} />
+            <ProductGrid items={items} />
+          </>
+        )}
       </main>
 
       <Footer />
